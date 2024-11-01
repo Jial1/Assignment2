@@ -1,12 +1,6 @@
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-import com.rabbitmq.client.DeliverCallback;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -16,10 +10,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.MessageProperties;
-import java.util.logging.Logger;
+import org.apache.commons.pool2.ObjectPool;
+import org.apache.commons.pool2.impl.GenericObjectPool;
 
 
 @WebServlet(value = "/skiers/*")
@@ -38,32 +30,13 @@ public class SkierServlet extends HttpServlet {
   private static final String TASK_QUEUE_NAME = "liftRideEvent_Queue";
   private static final int NUM_THREADS = 200;
   private static final int NUM_CHAN = 20;
-  private Connection rabbitMQConnection;
+  private ObjectPool<Channel> pool;
 
   @Override
   public void init() throws ServletException {
-    try {
-      ConnectionFactory factory = new ConnectionFactory();
-      factory.setHost("35.93.197.189");
-      factory.setPort(5672);
-      factory.setUsername("Jiali1");
-      factory.setPassword("12345");
-      rabbitMQConnection = factory.newConnection();
-    } catch (IOException | TimeoutException e) {
-      throw new ServletException("Failed to establish RabbitMQ connection", e);
-    }
+    this.pool = new GenericObjectPool<>(new RMQChannelFactory());
   }
 
-//  @Override
-//  public void destroy() {
-//    if (rabbitMQConnection != null) {
-//      try {
-//        rabbitMQConnection.close();
-//      } catch (IOException e) {
-//        e.printStackTrace();
-//      }
-//    }
-//  }
 
   @Override
   protected void doPost(HttpServletRequest req, HttpServletResponse res)
@@ -102,14 +75,12 @@ public class SkierServlet extends HttpServlet {
         return;
       }
 
-      if (!isInputValid(resortID, seasonID, dayID, skierID, liftRideEvent.getTime(), liftRideEvent.getLiftID(), res) && !isInputValid(
-          liftRideEvent.getResortID(), Integer.parseInt(liftRideEvent.getSeasonID()), Integer.parseInt(liftRideEvent.getDayID()),
-          liftRideEvent.getSkierID(), liftRideEvent.getTime(), liftRideEvent.getLiftID(), res)) {
+      if (!isInputValid(resortID, seasonID, dayID, skierID, liftRideEvent.getTime(), liftRideEvent.getLiftID(), res)) {
         return;
       }
       SuccessResponse successResponse = new SuccessResponse("POST request processed", liftRideEvent);
       String jsonResponse = gson.toJson(successResponse);
-      processRequest(jsonResponse, rabbitMQConnection);
+      processRequest(jsonResponse);
 
       PrintWriter out = res.getWriter();
       out.write(jsonResponse);
@@ -121,31 +92,24 @@ public class SkierServlet extends HttpServlet {
     }
   }
 
-  public void processRequest(String jsonResponse, Connection connection) {
-
+  public void processRequest(String jsonResponse) {
+    Channel channel = null;
     try {
-      RMQChannelFactory channelFactory = new RMQChannelFactory(connection);
-      RMQChannelPool pool = new RMQChannelPool(NUM_CHAN, channelFactory);
-      ExecutorService executor = Executors.newFixedThreadPool(NUM_THREADS);
-
-      for (int i = 0; i < NUM_THREADS; i++) {
-        executor.submit(() -> {
-          try {
-            Channel channel = pool.get();
-            channel.queueDeclare(TASK_QUEUE_NAME, true, false, false, null);
-            channel.basicPublish("", TASK_QUEUE_NAME, null, jsonResponse.getBytes());
-            pool.returnChannel(channel);
-          } catch (IOException e) {
-            e.printStackTrace();
-          }
-        });
-      }
-
-      executor.shutdown();
-      executor.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
-    } catch (InterruptedException e) {
+      channel = pool.borrowObject();
+      channel.queueDeclare(TASK_QUEUE_NAME, false, false, false, null);
+      channel.basicPublish("", TASK_QUEUE_NAME, null, jsonResponse.getBytes());
+    } catch (Exception e) {
       throw new RuntimeException(e);
+    } finally {
+      try {
+        if (channel != null) {
+          pool.returnObject(channel);
+        }
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
     }
+
   }
 
 

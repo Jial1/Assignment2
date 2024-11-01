@@ -15,19 +15,18 @@ public class Recv {
 
   public static void main(String[] argv) throws Exception {
     ConnectionFactory factory = new ConnectionFactory();
-    factory.setHost("35.93.197.189");
+    factory.setHost("44.243.83.103");
     factory.setPort(5672);
     factory.setUsername("Jiali1");
     factory.setPassword("12345");
+    Connection connection = factory.newConnection();
 
     ConcurrentHashMap<Integer, List<LiftRideEvent>> liftRide = new ConcurrentHashMap<>();
     ExecutorService executorService = Executors.newFixedThreadPool(NUM_Thread);
 
     for(int i=0; i<NUM_Thread; i++) {
-      executorService.submit(new ProcessLiftRide(liftRide, QUEUE_NAME, factory));
+      executorService.execute(new ProcessLiftRide(liftRide, QUEUE_NAME, connection));
     }
-    executorService.shutdown();
-    executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
 
   }
 }

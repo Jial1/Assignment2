@@ -15,22 +15,22 @@ public class ProcessLiftRide implements Runnable {
   private ConcurrentHashMap<Integer, List<LiftRideEvent>> liftRide;
   private String json;
   private final String QUEUE_NAME;
-  private final ConnectionFactory factory;
+  private final Connection connection;
 
   public ProcessLiftRide(ConcurrentHashMap<Integer, List<LiftRideEvent>> liftRide, String QUEUE_NAME,
-      ConnectionFactory factory) {
+      Connection connection) {
     this.liftRide = liftRide;
     this.QUEUE_NAME = QUEUE_NAME;
-    this.factory = factory;
+    this.connection = connection;
   }
 
   @Override
   public void run() {
-    try(Connection connection = factory.newConnection(); Channel channel = connection.createChannel()) {
-
+    try {
+      Channel channel = connection.createChannel();
       channel.queueDeclare(QUEUE_NAME, true, false, false, null);
 
-      channel.basicQos(1);
+      channel.basicQos(10);
       System.out.println(" [*] Thread waiting for messages. To exit press CTRL+C");
 
       DeliverCallback deliverCallback = (consumerTag, delivery) -> {
@@ -44,7 +44,7 @@ public class ProcessLiftRide implements Runnable {
       };
       // process messages
       channel.basicConsume(QUEUE_NAME, false, deliverCallback, consumerTag -> { });
-    } catch (IOException | TimeoutException e) {
+    } catch (IOException e) {
       throw new RuntimeException(e);
     }
 

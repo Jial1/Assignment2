@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class skierClient {
   private static int initialThread = 32;
   private static int totalRequest = 200000;
-  private static String url = "http://35.95.9.139:8080/SkierServer_war";
+  private static String url = "http://35.91.173.128:8080/SkierServer_war";
   private static int requestPerThread = 1000;
 
 
