@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class skierClient {
   private static int initialThread = 32;
   private static int totalRequest = 200000;
-  private static String url = "http://35.91.173.128:8080/SkierServer_war";
+  private static String url = "http://35.87.74.110:8080/SkierServer_war";
   private static int requestPerThread = 1000;
 
 
@@ -44,9 +44,6 @@ public class skierClient {
      }
      executorService.shutdown();
 
-//     LiftRideEventPoster test = new LiftRideEventPoster(eventQueue, 1000, url, failRequest, httpClient, successRequest);
-//     Thread testThread = new Thread(test);
-//     testThread.start();
 
      try {
        boolean finished = executorService.awaitTermination(1, TimeUnit.HOURS);
@@ -58,12 +55,6 @@ public class skierClient {
        System.out.println("Execution interrupted.");
      }
 
-//     try {
-//       testThread.join();
-//     } catch (InterruptedException e) {
-//       Thread.currentThread().interrupt();
-//       System.out.println("Event generator interrupted.");
-//     }
 
      try {
        eventThread.join();

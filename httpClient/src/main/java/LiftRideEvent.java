@@ -4,7 +4,7 @@ public class LiftRideEvent {
   private int skierID;
   private int resortID;
   private int liftID;
-  private String seasonId = "2024";
+  private String seasonID = "2024";
   private String dayID = "1";
   private int time;
 
@@ -36,7 +36,7 @@ public class LiftRideEvent {
         + "\"skierID\":" + skierID + ","
         + "\"resortID\":" + resortID + ","
         + "\"liftID\":" + liftID + ","
-        + "\"seasonId\":" + seasonId + ","
+        + "\"seasonId\":" + seasonID + ","
         + "\"dayID\":" + dayID + ","
         + "\"time\":" + time
         + "}";

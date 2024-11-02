@@ -2,8 +2,6 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 
 import com.rabbitmq.client.ConnectionFactory;
-import java.io.IOException;
-import java.util.concurrent.TimeoutException;
 import org.apache.commons.pool2.BasePooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
@@ -13,7 +11,7 @@ public class RMQChannelFactory extends BasePooledObjectFactory<Channel> {
 
   @Override
   synchronized public Channel create() throws Exception {
-    factory.setHost("44.243.83.103");
+    factory.setHost("35.95.108.13");
     factory.setPort(5672);
     factory.setUsername("Jiali1");
     factory.setPassword("12345");

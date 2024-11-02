@@ -80,7 +80,23 @@ public class SkierServlet extends HttpServlet {
       }
       SuccessResponse successResponse = new SuccessResponse("POST request processed", liftRideEvent);
       String jsonResponse = gson.toJson(successResponse);
-      processRequest(jsonResponse);
+      Channel channel = null;
+      try {
+        channel = pool.borrowObject();
+        channel.queueDeclare(TASK_QUEUE_NAME, false, false, false, null);
+        channel.basicPublish("", TASK_QUEUE_NAME, null, jsonResponse.getBytes());
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      } finally {
+        try {
+          if (channel != null) {
+            pool.returnObject(channel);
+          }
+        } catch (Exception e) {
+          throw new RuntimeException(e);
+        }
+      }
+
 
       PrintWriter out = res.getWriter();
       out.write(jsonResponse);
@@ -92,29 +108,25 @@ public class SkierServlet extends HttpServlet {
     }
   }
 
-  public void processRequest(String jsonResponse) {
-    Channel channel = null;
-    try {
-      channel = pool.borrowObject();
-      channel.queueDeclare(TASK_QUEUE_NAME, false, false, false, null);
-      channel.basicPublish("", TASK_QUEUE_NAME, null, jsonResponse.getBytes());
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    } finally {
-      try {
-        if (channel != null) {
-          pool.returnObject(channel);
-        }
-      } catch (Exception e) {
-        throw new RuntimeException(e);
-      }
-    }
-
-  }
-
-
-
-
+//  public void processRequest(String jsonResponse) {
+//    Channel channel = null;
+//    try {
+//      channel = pool.borrowObject();
+//      channel.queueDeclare(TASK_QUEUE_NAME, false, false, false, null);
+//      channel.basicPublish("", TASK_QUEUE_NAME, null, jsonResponse.getBytes());
+//    } catch (Exception e) {
+//      throw new RuntimeException(e);
+//    } finally {
+//      try {
+//        if (channel != null) {
+//          pool.returnObject(channel);
+//        }
+//      } catch (Exception e) {
+//        throw new RuntimeException(e);
+//      }
+//    }
+//
+//  }
 
   private String readRequestBody(HttpServletRequest req) throws IOException {
     StringBuilder requestData = new StringBuilder();

@@ -15,7 +15,7 @@ public class Recv {
 
   public static void main(String[] argv) throws Exception {
     ConnectionFactory factory = new ConnectionFactory();
-    factory.setHost("44.243.83.103");
+    factory.setHost("35.95.108.13");
     factory.setPort(5672);
     factory.setUsername("Jiali1");
     factory.setPassword("12345");
