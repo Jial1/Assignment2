@@ -10,10 +10,10 @@ public class RMQChannelFactory extends BasePooledObjectFactory<Channel> {
   ConnectionFactory factory = new ConnectionFactory();
 
   @Override
-  synchronized public Channel create() throws Exception {
-    factory.setHost("35.95.108.13");
+  public Channel create() throws Exception {
+    factory.setHost("52.35.158.255");
     factory.setPort(5672);
-    factory.setUsername("Jiali1");
+    factory.setUsername("jiali");
     factory.setPassword("12345");
     Connection connection = factory.newConnection();
     return connection.createChannel();

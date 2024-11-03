@@ -11,13 +11,13 @@ import java.util.concurrent.TimeUnit;
 
 public class Recv {
   private final static String QUEUE_NAME = "liftRideEvent_Queue";
-  private final static int NUM_Thread = 200;
+  private final static int NUM_Thread = 400;
 
   public static void main(String[] argv) throws Exception {
     ConnectionFactory factory = new ConnectionFactory();
-    factory.setHost("35.95.108.13");
+    factory.setHost("52.35.158.255");
     factory.setPort(5672);
-    factory.setUsername("Jiali1");
+    factory.setUsername("jiali");
     factory.setPassword("12345");
     Connection connection = factory.newConnection();
 

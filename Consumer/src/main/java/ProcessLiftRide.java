@@ -28,7 +28,7 @@ public class ProcessLiftRide implements Runnable {
   public void run() {
     try {
       Channel channel = connection.createChannel();
-      channel.queueDeclare(QUEUE_NAME, true, false, false, null);
+      channel.queueDeclare(QUEUE_NAME, false, false, false, null);
 
       channel.basicQos(10);
       System.out.println(" [*] Thread waiting for messages. To exit press CTRL+C");

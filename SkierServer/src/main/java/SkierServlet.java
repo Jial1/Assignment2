@@ -28,8 +28,6 @@ public class SkierServlet extends HttpServlet {
   private static final int VALID_SEASON_ID = 2024;
   private static final int VALID_DAY_ID = 1;
   private static final String TASK_QUEUE_NAME = "liftRideEvent_Queue";
-  private static final int NUM_THREADS = 200;
-  private static final int NUM_CHAN = 20;
   private ObjectPool<Channel> pool;
 
   @Override
@@ -107,26 +105,6 @@ public class SkierServlet extends HttpServlet {
       sendErrorResponse(res, HttpServletResponse.SC_BAD_REQUEST, "Invalid request body");
     }
   }
-
-//  public void processRequest(String jsonResponse) {
-//    Channel channel = null;
-//    try {
-//      channel = pool.borrowObject();
-//      channel.queueDeclare(TASK_QUEUE_NAME, false, false, false, null);
-//      channel.basicPublish("", TASK_QUEUE_NAME, null, jsonResponse.getBytes());
-//    } catch (Exception e) {
-//      throw new RuntimeException(e);
-//    } finally {
-//      try {
-//        if (channel != null) {
-//          pool.returnObject(channel);
-//        }
-//      } catch (Exception e) {
-//        throw new RuntimeException(e);
-//      }
-//    }
-//
-//  }
 
   private String readRequestBody(HttpServletRequest req) throws IOException {
     StringBuilder requestData = new StringBuilder();

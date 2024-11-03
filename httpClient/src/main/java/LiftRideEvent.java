@@ -36,7 +36,7 @@ public class LiftRideEvent {
         + "\"skierID\":" + skierID + ","
         + "\"resortID\":" + resortID + ","
         + "\"liftID\":" + liftID + ","
-        + "\"seasonId\":" + seasonID + ","
+        + "\"seasonID\":" + seasonID + ","
         + "\"dayID\":" + dayID + ","
         + "\"time\":" + time
         + "}";

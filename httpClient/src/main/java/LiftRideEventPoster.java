@@ -2,7 +2,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -13,15 +13,17 @@ public class LiftRideEventPoster implements Runnable {
   private final AtomicInteger failRequest;
   private final HttpClient httpClient;
   private final AtomicInteger successRequest;
+  private final List<performance> performanceList;
 
   public LiftRideEventPoster(BlockingQueue<LiftRideEvent> eventQueue, int requestPerThread, String url,
-      AtomicInteger failRequest, HttpClient httpClient, AtomicInteger successRequest) {
+      AtomicInteger failRequest, HttpClient httpClient, AtomicInteger successRequest, List<performance> performanceList) {
     this.eventQueue = eventQueue;
     this.requestPerThread = requestPerThread;
     this.serverURL = url;
     this.failRequest = failRequest;
     this.httpClient = httpClient;
     this.successRequest = successRequest;
+    this.performanceList = performanceList;
   }
 
   @Override
@@ -35,7 +37,8 @@ public class LiftRideEventPoster implements Runnable {
             liftRideEvent.getResortID(),
             liftRideEvent.getSkierID()
         );
-        boolean success = sendPostRequest(liftRideEvent.toJson(), 0, URI.create(dynamicUrl));
+        Long startTime = System.currentTimeMillis();
+        boolean success = sendPostRequest(liftRideEvent.toJson(), 0, URI.create(dynamicUrl), startTime);
         if(!success) {
           failRequest.incrementAndGet();
         } else {
@@ -47,7 +50,7 @@ public class LiftRideEventPoster implements Runnable {
     }
   }
 
-  private boolean sendPostRequest(String json, int retry, URI dynamicUrl) {
+  private boolean sendPostRequest(String json, int retry, URI dynamicUrl, Long startTime) {
     if (retry >= 5) {
       return false;
     }
@@ -59,19 +62,23 @@ public class LiftRideEventPoster implements Runnable {
     try {
       HttpResponse<String> res = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
 
+      long endTime = System.currentTimeMillis();
+      long elapsedTime = endTime - startTime;
+      performanceList.add(new performance(startTime, "POST", elapsedTime, res.statusCode()));
+
       int responseCode = res.statusCode();
       if (responseCode == 201) {
         System.out.println("Data sent: " + res.body());
         return true;
       } else {
         System.out.println("Response Code: " + res.body());
-        return sendPostRequest(json, retry + 1, dynamicUrl);
+        return sendPostRequest(json, retry + 1, dynamicUrl, startTime);
       }
     } catch (Exception e) {
       if(e instanceof InterruptedException) {
         Thread.currentThread().interrupt();
       }
-      return sendPostRequest(json, retry + 1, dynamicUrl);
+      return sendPostRequest(json, retry + 1, dynamicUrl, startTime);
     }
   }
 }
